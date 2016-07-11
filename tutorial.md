@@ -1,7 +1,5 @@
-HUBSTAFF GEM TUTORIAL
-
+# Hubstaff Gem Tutorial
 [Add Screenshot of App Homepage]
-
 
 This tutorial will go over how to incorporate the Hubstaff gem into your Rails application. The Hubstaff gem allows you to easily link a User to their Hubstaff account and retrieve useful information such as custom team reports, project and activity details, screenshots, and much more. The Github repository [link to repository] includes two branches. The master branch is the starter application that this tutorial will walk through and the final-tut branch is the complete application. This tutorial will go over first linking a User to their Hubstaff account and then go over how to retrieve data. We will be retrieving data via two endpoints provided by the Hubstaff API, custom team reports and screenshots. Before we begin you will need to set up a Hubstaff account [link to https://hubstaff.com/]. I also recommend creating some data so that your application will be able to view data, specifically create a organization, project, notes, and a few screenshots. After you have created some data we need to go to the Hubstaff developer page [link to https://developer.hubstaff.com/] to create our application and receive our App Token. Once we have our App Token we’re ready to dive in.
 
@@ -50,7 +48,7 @@ end
 Once that file is created we can run rake db:migrate to migrate the database.
 
 Now that our User class has access to a client attribute we can link the logged in user to their Hubstaff account. First let’s reorganize the `application.html.erb` file to include a button that will link to our Hubstaff log in form. Change the nav block to this:
-```ruby
+```erb
   <nav class="navbar navbar-default">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -91,7 +89,7 @@ Rails.application.routes.draw do
 end
 ```
 Next we will build out our log in form. Create a file called `client.html.erb` and add the following form:
-```ruby
+```erb
 <%= form_tag(controller: "users", action: "auth_client", method: "post") do %>
   <%= label_tag :email %>
   <%= text_field_tag :hubstaff_email %>
@@ -125,7 +123,7 @@ end
 
 The `auth_client` method validates that the form params are present and then assigns a new instance of the Hubstaff::Client class to the variable client. If the form was not fully filled in or the log in was unsuccessful the client will return nil and we redirect the user with a flash message. Otherwise the user’s client attribute is assign the the client variable which stores the instance of Hubstaff::Client, saves the user and redirects with a success message. Now the user is fully linked to their Hubstaff account and won’t need to log in again we they use the application!
 
-Now that the user is linked to their Hubstaff account we can use forms to retrieve specific information. As I mentioned in the introduction, this tutorial will go over retrieving custom team report data and screenshots. Lets get started.
+Now that the user is linked to their Hubstaff account we can use forms to retrieve specific information. As I mentioned in the introduction, this tutorial will go over retrieving custom team report data and screenshots. Check out the documentation [link to docs] if you would like to learn about additional methods provided by the Hubstaff gem. Lets get started.
 
 First we will add the appropriate post routes to handle our form data. Here is what the final routes file should look like:
 ```ruby
@@ -145,9 +143,9 @@ Rails.application.routes.draw do
   resources :sessions
 end
 ```
-Next in our `show.html.erb` file we will build our buttons and for the forms we will use Bootstrap modals. Here is what the revised show file will look like:
+Next in our `show.html.erb` file we will build our buttons and forms using Bootstrap modals. Here is what the revised show file will look like:
 
-```ruby
+```erb
 <h1>Welcome <%= @user.email %></h1>
 
 <% if @user.client %>
@@ -155,7 +153,7 @@ Next in our `show.html.erb` file we will build our buttons and for the forms we 
     Create a custom Hubstaff team report
   </button>
 
-  <!-- Modal -->
+  <!-- Custom Report Modal -->
   <div class="modal fade" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -196,7 +194,7 @@ Next in our `show.html.erb` file we will build our buttons and for the forms we 
     Retrieve Screenshots From Your Hubstaff Account
   </button>
 
-  <!-- Modal -->
+  <!-- Screenshot Modal -->
   <div class="modal fade" id="screenModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -229,4 +227,39 @@ Next in our `show.html.erb` file we will build our buttons and for the forms we 
   </div>
 <% end %>
 ```
+Finally we have to write the methods to retrieve the custom report data and screenshots. Let’s begin with the custom report method.
+```ruby
+  def custom_report
+    user = current_user
+    options = {}
+    options[:orgs] = params[:orgs] unless params[:orgs] == ""
+    options[:projects] = params[:projects] unless params[:projects] == ""
+    options[:users] = params[:users] unless params[:users] = ""
+    options[:show_tasks] = params[:show_tasks]
+    options[:show_notes] = params[:show_notes]
+    options[:show_activity] = params[:show_activity]
+    options[:include_archieved] = params[:include_archieved]
+    @report = user.client.custom_date_team(params[:start_date], params[:end_date], options)
+  end
+```
+Before calling the Hubstaff gem method `custom_data_team` we need to build our options hash with the params provided by the form. We also need to add some validations so that we don’t pass an empty string as a value. It’s important to use the proper key names for using all the Hubstaff methods that take a options hash correctly, please reference the documentation to confirm the proper key names needed for each method. 
+
+With the options hash built, we can simply pass the returned JSON to @report, so we can access it in our view page.  As a side note, all Hubstaff methods will return JSON data. Now it’s only a matter of extracting the JSON to display nicely on our view page. Create a file called `custom_report.html.erb` and place the following code in it:
+```ruby
+<% @report["organizations"].each do |org| %>
+  <h1>Organization Name: <%= org["name"] %></h1>
+  <% org["dates"].each do |date| %>
+    <h2>Date: <%= date["date"] %></h2>
+    <% date["users"].each do |user| %>
+      <h3>User: <%= user["name"] %></h3>
+        <% user["projects"].each do |project| %>
+          <h1>Project: <%= project["name"] %></h1>
+        <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+```
+Awesome now we can retrieve a custom team report from our Hubstaff account!
+[Insert image of custom report]
+
 
