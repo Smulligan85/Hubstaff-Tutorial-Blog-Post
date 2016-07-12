@@ -1,5 +1,4 @@
-# Hubstaff Gem Tutorial
-[Add Screenshot of App Homepage]
+![Tutorial Homepage](/images/homepage.png)
 
 This tutorial will go over how to incorporate the Hubstaff gem into your Rails application. The Hubstaff gem allows you to easily link a User to their Hubstaff account and retrieve useful information such as custom team reports, project and activity details, screenshots, and much more. The [Github repository](https://github.com/Smulligan85/Hubstaff-Gem-Tutorial) for this tutorial includes two branches. The master branch is the starter application that this tutorial will walkthrough and the final-tut branch is the complete application. The starter applicaiton is a basic Rails app that includes a User model and some basic authentication. This tutorial will go over first linking a User to their Hubstaff account and then go over how to retrieve data. We will be retrieving data via two endpoints provided by the Hubstaff API, custom team reports and screenshots. Before we begin you will need to set up a [Hubstaff account](https://hubstaff.com/). I also recommend creating some data so that your application will be able to view data, specifically create a organization, project, notes, and a few screenshots. After you have created some data we need to go to the [Hubstaff developer page](https://developer.hubstaff.com/) to create our application and receive our App Token. Click My Apps and create a new application. Once we have our App Token we’re ready to dive in.
 
@@ -255,7 +254,7 @@ With the options hash built, we will simply pass it as the third argument and as
 <% end %>
 ```
 Awesome now we can retrieve a custom team report from our Hubstaff account!
-
+![Custom Report](/images/custom_report.png)
 [Insert image of custom report]
 
 Next let's create a method to retrieve screenshots. Back in our `users_controller.rb` file add the following method:
