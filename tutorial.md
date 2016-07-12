@@ -1,6 +1,6 @@
 ![Tutorial Homepage](/images/homepage.png)
 
-This tutorial will go over how to incorporate the Hubstaff gem into your Rails application. The Hubstaff gem allows you to easily link a User to their Hubstaff account and retrieve useful information such as custom team reports, project and activity details, screenshots, and much more. The [Github repository](https://github.com/Smulligan85/Hubstaff-Gem-Tutorial) for this tutorial includes two branches. The master branch is the starter application that this tutorial will walkthrough and the final-tut branch is the complete application. The starter applicaiton is a basic Rails app that includes a User model and some basic authentication. This tutorial will go over first linking a User to their Hubstaff account and then go over how to retrieve data. We will be retrieving data via two endpoints provided by the Hubstaff API, custom team reports and screenshots. Before we begin you will need to set up a [Hubstaff account](https://hubstaff.com/). I also recommend creating some data so that your application will be able to view data, specifically create a organization, project, notes, and a few screenshots. After you have created some data we need to go to the [Hubstaff developer page](https://developer.hubstaff.com/) to create our application and receive our App Token. Click My Apps and create a new application. Once we have our App Token we’re ready to dive in.
+This tutorial will go over how to integrate the Hubstaff gem into your Rails application. The Hubstaff gem allows you to easily link a User to their Hubstaff account and retrieve useful information such as custom team reports, project and activity details, screenshots, and much more. The [Github repository](https://github.com/Smulligan85/Hubstaff-Gem-Tutorial) for this tutorial includes two branches. The master branch is the starter application that this tutorial will walkthrough and the final-tut branch is the complete application. The starter applicaiton is a basic Rails app that includes a User model and some basic authentication. This tutorial will go over first linking a User to their Hubstaff account and then go over how to retrieve data. We will be retrieving data via two endpoints provided by the Hubstaff API, custom team reports and screenshots. Before we begin you will need to set up a [Hubstaff account](https://hubstaff.com/). I also recommend creating some data so that your application will be able to view data, specifically create a organization, project, notes, and a few screenshots. After you have created some data we need to go to the [Hubstaff developer page](https://developer.hubstaff.com/) to create our application and receive our App Token. Click My Apps and create a new application. Once we have our App Token we’re ready to dive in.
 
 Clone the master branch down and open the application in your editor of choice. First we will open up our Gemfile and add the hubstaff-ruby gem and dotenv gem and run `bundle install`.
 
@@ -131,8 +131,8 @@ Rails.application.routes.draw do
 
   get 'users/:id/hubstaff', to: 'users#client', as: 'client'
   post '/auth_client', to: 'users#auth_client'
-  post '/custom_report', to: 'users#custom_report'
-  post '/screenshots', to: 'users#screenshots'
+  post '/custom_report', to: 'users#get_custom_report'
+  post '/screenshots', to: 'users#get_screenshots'
 
   resources :users
   resources :sessions
@@ -156,7 +156,7 @@ Next in our `show.html.erb` file we will build our buttons and forms using Boots
           <h4 class="modal-title" id="myModalLabel">Create a Custom Team Report by Date</h4>
         </div>
         <div class="modal-body">
-          <%= form_tag(controller: "users", action: "custom_report", method: "post") do %>
+          <%= form_tag(controller: "users", action: "get_custom_report", method: "post") do %>
             <%= label_tag "Start Date" %>
             <%= text_field_tag :start_date, nil, placeholder: "2016-05-23" %>
             <%= label_tag "End Date" %>
@@ -197,7 +197,7 @@ Next in our `show.html.erb` file we will build our buttons and forms using Boots
           <h4 class="modal-title" id="myModalLabel">Retrieve Screenshots</h4>
         </div>
         <div class="modal-body">
-          <%= form_tag(controller: "users", action: "screenshots", method: "post") do %>
+          <%= form_tag(controller: "users", action: "get_screenshots", method: "post") do %>
             <%= label_tag "Start Time" %>
             <%= text_field_tag :start_time, nil, placeholder: "2016-05-22" %>
             <%= label_tag "Stop Time"%>
@@ -238,7 +238,7 @@ Finally we have to write the methods to retrieve the custom report data and scre
 ```
 Before calling the Hubstaff gem method `#custom_data_team` we need to build our options hash with the params provided by the form. We also need to add some validations so that we don’t pass an empty string as a value. It’s important to use the proper key names for using all the Hubstaff methods that take a options hash correctly, please reference the [documentation](https://github.com/hookengine/hubstaff-ruby) to confirm the proper key names needed for each method. 
 
-With the options hash built, we will simply pass it as the third argument and assign the returned JSON to @report.  As a side note, all Hubstaff methods will return JSON data. Now it’s only a matter of extracting the JSON to display nicely on our view page. Create a file called `custom_report.html.erb` and place the following code in it:
+With the options hash built, we will simply pass it as the third argument and assign the returned JSON to @report.  As a side note, all Hubstaff methods will return JSON data. Now it’s only a matter of extracting the JSON to display nicely on our view page. Create a file called `get_custom_report.html.erb` and place the following code in it:
 ```erb
 <% @report["organizations"].each do |org| %>
   <h1>Organization Name: <%= org["name"] %></h1>
@@ -254,8 +254,8 @@ With the options hash built, we will simply pass it as the third argument and as
 <% end %>
 ```
 Awesome now we can retrieve a custom team report from our Hubstaff account!
+
 ![Custom Report](/images/custom_report.png)
-[Insert image of custom report]
 
 Next let's create a method to retrieve screenshots. Back in our `users_controller.rb` file add the following method:
 ```ruby
@@ -271,7 +271,7 @@ end
 ```
 This method is very similar to our `#get_custom_report` method, where we build a options hash based on the form params and pass that hash as the third argument to our `#screenshots` method. Now all that is left to do is display each screenshot. As I mentioned before all methods provided by the Hubstaff gem return JSON. Specifically, the `#screenshots` JSON output contains a url key with a value equal to the screenshot url. Let's extract the url address and display the each image on our view page.
 
-Create a file called `screenshots.html.erb` and add the following code:
+Create a file called `get_screenshots.html.erb` and add the following code:
 ```ruby
 <% @screenshots["screenshots"].each do |screen| %>
   <%= image_tag "#{screen['url']}"%><br><br><br>
